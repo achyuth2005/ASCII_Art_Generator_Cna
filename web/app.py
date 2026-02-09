@@ -456,91 +456,267 @@ def run_direct_optimization(prompt, width, steps, progress=gr.Progress()):
 
 # Custom CSS for Claude-inspired dark theme
 CUSTOM_CSS = """
-:root {
-    --primary: #6c5ce7;
-    --primary-hover: #5f4dd0;
-    --bg-dark: #0f0f1a;
-    --bg-card: #1a1a2e;
-    --bg-input: #16213e;
-    --text-primary: #e4e4e7;
-    --text-secondary: #a1a1aa;
-    --border: #2d2d44;
-}
+/* =============================================
+   PAYROT FINTECH GLASSMORPHISM THEME
+   Deep Navy + Glass Cards + Electric Blue Accents
+   ============================================= */
 
+/* --- Global Body Styles --- */
 .gradio-container {
-    background: var(--bg-dark) !important;
-    font-family: 'Inter', system-ui, sans-serif;
+    background: radial-gradient(circle at 50% 0%, #1e3a5f 0%, #0a192f 80%) !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    min-height: 100vh;
 }
 
+/* --- Header with Gradient Text --- */
 .main-header {
     text-align: center;
-    padding: 2rem;
-    background: linear-gradient(135deg, var(--bg-card), var(--bg-dark));
-    border-radius: 16px;
-    margin-bottom: 1.5rem;
-    border: 1px solid var(--border);
+    padding: 2.5rem 2rem;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    margin-bottom: 2rem;
 }
 
 .main-header h1 {
-    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    background: linear-gradient(135deg, #2b7af1, #4facfe);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    font-size: 2.5rem;
-    font-weight: 700;
+    background-clip: text;
+    font-size: 2.8rem;
+    font-weight: 800;
     margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
 }
 
 .main-header p {
-    color: var(--text-secondary);
-    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.15rem;
+    font-weight: 400;
 }
 
-.ascii-output {
-    font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
-    font-size: 10px !important;
-    line-height: 1.1 !important;
-    background: var(--bg-input) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 12px !important;
-    padding: 1rem !important;
-    white-space: pre !important;
-    overflow-x: auto !important;
+/* --- Transforming Containers into "Glass" Cards --- */
+.gr-box, .gr-panel, .gr-form, .gr-group {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 24px !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
 }
 
-.gr-button-primary {
-    background: linear-gradient(135deg, var(--primary), var(--primary-hover)) !important;
-    border: none !important;
+/* --- Input Fields --- */
+.gr-input, .gr-textbox textarea, .gr-dropdown {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+    border-radius: 16px !important;
+    padding: 14px 18px !important;
+    font-size: 1rem !important;
+}
+
+.gr-input::placeholder, .gr-textbox textarea::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.gr-input:focus, .gr-textbox textarea:focus {
+    border-color: #4facfe !important;
+    box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.2) !important;
+    outline: none !important;
+}
+
+/* --- Labels --- */
+.gr-form label, .gr-block label, label {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+}
+
+/* --- The Payrot Pill-Button (Primary) --- */
+button.primary, .gr-button-primary, .gr-button-lg {
+    background: linear-gradient(135deg, #2b7af1 0%, #4facfe 100%) !important;
     color: white !important;
+    border: none !important;
+    border-radius: 50px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    padding: 16px 40px !important;
+    font-size: 1rem !important;
+    box-shadow: 0 8px 20px rgba(79, 172, 254, 0.4) !important;
+    transition: all 0.3s ease !important;
+}
+
+button.primary:hover, .gr-button-primary:hover, .gr-button-lg:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 12px 25px rgba(79, 172, 254, 0.6) !important;
+}
+
+/* --- Secondary Buttons (Glass Pills) --- */
+button.secondary, .gr-button-secondary, button:not(.primary) {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 50px !important;
     font-weight: 600 !important;
     padding: 12px 24px !important;
-    border-radius: 8px !important;
-    transition: transform 0.2s, box-shadow 0.2s !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    transition: all 0.2s ease !important;
 }
 
-.gr-button-primary:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 20px rgba(108, 92, 231, 0.3) !important;
+button.secondary:hover, .gr-button-secondary:hover, button:not(.primary):hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+    transform: translateY(-1px) !important;
 }
 
-.gr-panel {
-    background: var(--bg-card) !important;
-    border: 1px solid var(--border) !important;
+/* --- ASCII Output: Terminal Style --- */
+.ascii-output, .gr-textbox.ascii-output textarea {
+    background: #0f172a !important;
+    border: 1px solid rgba(56, 189, 248, 0.2) !important;
+    color: #38bdf8 !important;
+    font-family: 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
+    font-size: 7px !important;
+    line-height: 1.0 !important;
+    border-radius: 16px !important;
+    padding: 1.5rem !important;
+    white-space: pre !important;
+    overflow-x: auto !important;
+    box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* --- Thinking Process Log: Semi-transparent Terminal Overlay --- */
+.process-log textarea {
+    background: rgba(15, 23, 42, 0.8) !important;
+    border: 1px solid rgba(56, 189, 248, 0.15) !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-family: 'Fira Code', monospace !important;
+    font-size: 0.85rem !important;
+    border-radius: 16px !important;
+    backdrop-filter: blur(5px);
+}
+
+/* --- Tabs --- */
+.gr-tab-nav {
+    background: transparent !important;
+    border: none !important;
+}
+
+.gr-tab-nav button {
+    background: transparent !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    border: none !important;
+    font-weight: 600 !important;
+    padding: 12px 24px !important;
+    border-radius: 12px !important;
+    transition: all 0.2s ease !important;
+}
+
+.gr-tab-nav button.selected, .gr-tab-nav button:hover {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* --- Accordion --- */
+.gr-accordion {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 16px !important;
+    backdrop-filter: blur(10px);
+}
+
+.gr-accordion-title {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 600 !important;
+}
+
+/* --- Sliders --- */
+.gr-slider input[type="range"] {
+    accent-color: #4facfe !important;
+}
+
+/* --- Checkboxes --- */
+.gr-checkbox input[type="checkbox"]:checked {
+    background: #4facfe !important;
+    border-color: #4facfe !important;
+}
+
+/* --- Dropdown --- */
+.gr-dropdown select {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
     border-radius: 12px !important;
 }
 
-.gr-input, .gr-textbox textarea {
-    background: var(--bg-input) !important;
-    border: 1px solid var(--border) !important;
-    color: var(--text-primary) !important;
-    border-radius: 8px !important;
+/* --- Image Preview --- */
+.gr-image {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
 }
 
-.gr-padded {
-    padding: 1.5rem !important;
+/* --- Markdown Text --- */
+.gr-markdown {
+    color: rgba(255, 255, 255, 0.85) !important;
 }
 
+.gr-markdown h3 {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+/* --- Example Buttons Row --- */
+.example-buttons button {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 50px !important;
+    font-size: 0.85rem !important;
+    padding: 10px 20px !important;
+    backdrop-filter: blur(8px) !important;
+    transition: all 0.2s ease !important;
+}
+
+.example-buttons button:hover {
+    background: rgba(79, 172, 254, 0.3) !important;
+    border-color: rgba(79, 172, 254, 0.5) !important;
+    color: white !important;
+    transform: translateY(-1px) !important;
+}
+
+/* --- Scrollbar Styling --- */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #2b7af1, #4facfe);
+    border-radius: 4px;
+}
+
+/* --- Hide Footer --- */
 footer {
     display: none !important;
+}
+
+/* --- Status Text --- */
+.status-text {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* --- Info Text --- */
+.gr-info {
+    color: rgba(255, 255, 255, 0.5) !important;
 }
 """
 
