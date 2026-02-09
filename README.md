@@ -12,6 +12,49 @@ Transform text prompts and images into stunning ASCII art using AI and computer 
 
 ---
 
+## ⚡ Quick Run
+
+### 1. Setup Environment
+```bash
+git clone https://github.com/Aniket03052006/ASCII_Art_Generator_Cna.git
+cd ASCII_Art_Generator_Cna
+python -m venv .venv
+source .venv/bin/activate    # On Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### 2. Configure API Keys
+Create a `.env` file with your API keys (copy from `.env.example`):
+```bash
+HF_TOKEN=your_huggingface_token        # Required - get from https://huggingface.co/settings/tokens
+GEMINI_API_KEY=your_gemini_key         # Optional - better prompt rewriting
+GROQ_API_KEY=your_groq_key             # Optional - fallback LLM
+```
+
+### 3. Start the Application
+
+**Option A: React Frontend + FastAPI (Recommended)**
+```bash
+# Terminal 1 - Start the backend API
+source .venv/bin/activate
+python api/main.py
+# Server runs at http://localhost:8000
+
+# Terminal 2 - Start the React frontend
+cd react-app
+npm install    # First time only
+npm run dev
+# Frontend runs at http://localhost:5174
+```
+
+**Option B: Gradio Web Interface**
+```bash
+python web/app.py
+# Open http://localhost:7860
+```
+
+---
+
 ## 🎯 Project Overview
 
 This project implements an **AI-powered multi-stage pipeline** for converting text prompts to high-quality ASCII art:
@@ -311,26 +354,7 @@ blended = original * (1 - weight) + edges * weight
 
 ---
 
-### 9. PNG Export (`exporter.py`)
 
-**The Problem**: Copy-pasting ASCII text looks different on every app (fonts, spacing, colors).
-
-**Our Solution**: Render to PNG image with guaranteed monospace font.
-
-**Why It Matters**:
-- **Consistent Display**: Same appearance everywhere
-- **Shareable**: Send as image on social media, chat apps
-- **Archivable**: Permanent record of the art
-
-```python
-font = ImageFont.truetype("Menlo.ttc", font_size=18)
-draw.text((x, y), ascii_line, font=font, fill="black")
-image.save("output.png")
-```
-
-**Impact**: Shareability increased from 10% to 100%.
-
----
 
 ### 10. Saliency-Guided Edge Detection (`advanced_preprocessing.py`)
 
@@ -442,7 +466,6 @@ flowchart TB
 
     subgraph Output["📤 Output"]
         ASCII[ASCII Art Text]
-        RENDER[Rendered PNG]
     end
 
     UP --> LLM
@@ -453,7 +476,6 @@ flowchart TB
     
     Mappers --> AutoSelect
     AutoSelect --> |"Best Match"| ASCII
-    ASCII --> RENDER
 ```
 
 ### Component Details
@@ -595,7 +617,6 @@ python web/app.py
 from ascii_gen.online_generator import OnlineGenerator
 from ascii_gen.gradient_mapper import image_to_gradient_ascii
 from ascii_gen.llm_rewriter import LLMPromptRewriter
-from ascii_gen.exporter import render_ascii_to_image
 
 # 1. Rewrite prompt (optional but recommended)
 rewriter = LLMPromptRewriter()
@@ -608,9 +629,6 @@ image = gen.generate(prompt)
 
 # 3. Convert to ASCII
 ascii_art = image_to_gradient_ascii(image, width=80, ramp="ultra")
-
-# 4. Export to PNG
-png_path = render_ascii_to_image(ascii_art)
 ```
 
 ---
@@ -689,7 +707,6 @@ Neural Mapper:  Off
 | Gradient Mapping (80 chars) | ~0.1s | Fast NumPy ops |
 | CNN Mapping (80 chars) | ~5s | Includes training |
 | SSIM Mapping (80 chars) | ~10s | Perceptual optimization |
-| PNG Export | ~0.1s | PIL rendering |
 
 ---
 
