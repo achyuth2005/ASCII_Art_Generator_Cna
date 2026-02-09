@@ -1,8 +1,8 @@
 import '@mantine/core/styles.css'
-import { MantineProvider, createTheme, Container, Title, Text, Textarea, Button, Group, Stack, Paper, Slider, Select, Badge, ActionIcon, Tooltip, Collapse, Box, SimpleGrid, Code, CopyButton, Loader, Switch, NumberInput, Accordion, Tabs, Divider, Center } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
-import { useState } from 'react'
-import { Sparkles, Settings, Copy, Check, ChevronDown, Image as ImageIcon, Terminal, Cpu, Palette, Wand2, Moon, Route, Brain, Home, Cat, Star, Mountain, TreePine, Heart, Rocket, Lightbulb, Play } from 'lucide-react'
+import './App.css'
+import { MantineProvider, createTheme, Container, Title, Text, Textarea, Button, Group, Stack, Paper, Slider, Select, Badge, ActionIcon, Tooltip, Box, SimpleGrid, Code, CopyButton, Loader, Switch, NumberInput, Tabs, Divider, Center, Skeleton, Transition } from '@mantine/core'
+import { useState, useEffect } from 'react'
+import { Sparkles, Settings, Copy, Check, Image as ImageIcon, Terminal, Cpu, Palette, Wand2, Moon, Route, Brain, Home, Cat, Star, Mountain, TreePine, Heart, Lightbulb, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -74,9 +74,18 @@ function App() {
   const [ascii, setAscii] = useState('')
   const [image, setImage] = useState('')
   const [logs, setLogs] = useState([])
+  const [asciiFontSize, setAsciiFontSize] = useState(6)
+  const [imageLoaded, setImageLoaded] = useState(false)
+
+  // Reset image loaded state when image changes
+  useEffect(() => {
+    if (image) setImageLoaded(false)
+  }, [image])
 
   const addLog = (msg, type = 'info') => {
-    setLogs(prev => [...prev.slice(-8), { msg, type, id: Date.now() }])
+    const now = new Date()
+    const timestamp = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    setLogs(prev => [...prev.slice(-8), { msg, type, id: Date.now(), timestamp }])
   }
 
   const handleGenerate = async () => {
@@ -122,17 +131,18 @@ function App() {
 
   return (
     <MantineProvider theme={theme} defaultColorScheme="dark">
-      <Box style={{ minHeight: '100vh', background: 'var(--mantine-color-dark-8)' }}>
+      <Box className="app-container" style={{ minHeight: '100vh', background: 'var(--mantine-color-dark-8)' }}>
         <Container size="xl" py="xl">
           {/* Header */}
-          <Box mb={50} pt="md">
+          <Box mb={50} pt="md" className="header-section">
             <Group justify="space-between" align="flex-start" wrap="wrap">
               <Box>
-                <Text size="xs" tt="uppercase" fw={700} c="blue.4" mb={8} style={{ letterSpacing: '0.15em' }}>
+                <Text size="xs" tt="uppercase" fw={700} c="blue.4" mb={8} style={{ letterSpacing: '0.15em' }} className="header-label">
                   Text-to-Art Pipeline
                 </Text>
                 <Title
                   order={1}
+                  className="header-title"
                   style={{
                     fontSize: 'clamp(2.5rem, 5vw, 3.5rem)',
                     fontWeight: 800,
@@ -145,17 +155,12 @@ function App() {
                   <Text
                     component="span"
                     inherit
-                    style={{
-                      background: 'linear-gradient(135deg, #4dabf7 0%, #748ffc 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      marginLeft: '0.3em'
-                    }}
+                    className="gradient-text"
                   >
                     Generator
                   </Text>
                 </Title>
-                <Text c="dimmed" size="lg" maw={500} lw={400}>
+                <Text c="dimmed" size="lg" maw={500} fw={400}>
                   Turn your ideas into stunning character-based art using the power of FLUX.1 and neural networks.
                 </Text>
               </Box>
@@ -164,11 +169,13 @@ function App() {
                 size="md"
                 radius="sm"
                 color="gray"
-                style={{ marginTop: 8, textTransform: 'none', fontWeight: 500 }}
+                className="version-badge"
               >
                 v2.0 • Production Build
               </Badge>
             </Group>
+            {/* Animated gradient line */}
+            <Box className="gradient-line" mt="lg" />
           </Box>
 
           <SimpleGrid cols={{ base: 1, lg: 2 }} spacing={40}>
@@ -176,19 +183,21 @@ function App() {
             <Stack gap="xl">
               {/* Creator Section */}
               <Box>
-                <Group gap="xs" mb="sm">
-                  <Sparkles size={16} className="mantine-primary" />
+                <Group gap="xs" mb="sm" className="section-header">
+                  <Box className="section-icon">
+                    <Sparkles size={16} />
+                  </Box>
                   <Text tt="uppercase" size="xs" fw={700} c="dimmed" style={{ letterSpacing: '0.1em' }}>
                     Creator Studio
                   </Text>
                 </Group>
 
-                <Paper p="xl" radius="lg" withBorder bg="var(--mantine-color-dark-7)">
+                <Paper p="xl" radius="lg" withBorder bg="var(--mantine-color-dark-7)" className="glass-card">
                   <Stack gap="md">
                     <Textarea
                       size="lg"
                       label={<Text fw={600} mb={4}>Prompt</Text>}
-                      description="Describe what you want to create in detail"
+                      description="Describe what you want to create - be specific about style, colors, and composition"
                       placeholder="A cyberpunk city street at night with neon rain..."
                       minRows={3}
                       value={prompt}
@@ -199,15 +208,21 @@ function App() {
                           handleGenerate()
                         }
                       }}
-                      styles={{ input: { fontSize: '1.1rem' } }}
+                      styles={{ 
+                        input: { 
+                          fontSize: '1.1rem',
+                          transition: 'border-color 0.2s, box-shadow 0.2s',
+                        } 
+                      }}
+                      classNames={{ input: 'prompt-input' }}
                     />
 
-                    <Group gap="xs">
-                      <Group gap={6} align="center">
+                    <Box>
+                      <Group gap={6} align="center" mb="sm">
                         <Lightbulb size={14} color="var(--mantine-color-yellow-5)" />
                         <Text size="xs" fw={600} c="dimmed">TRY AN EXAMPLE</Text>
                       </Group>
-                      <Group gap={6}>
+                      <Group gap={8} wrap="wrap">
                         {EXAMPLES.map(ex => {
                           const IconComponent = ex.icon
                           return (
@@ -219,37 +234,39 @@ function App() {
                               radius="xl"
                               leftSection={<IconComponent size={14} />}
                               onClick={() => setPrompt(ex.label)}
-                              styles={{ root: { backgroundColor: 'rgba(255,255,255,0.03)' } }}
+                              className="example-chip"
                             >
                               {ex.label}
                             </Button>
                           )
                         })}
                       </Group>
-                    </Group>
+                    </Box>
                   </Stack>
                 </Paper>
               </Box>
 
               {/* Configuration Section */}
               <Box>
-                <Group gap="xs" mb="sm">
-                  <Settings size={16} className="mantine-primary" />
+                <Group gap="xs" mb="sm" className="section-header">
+                  <Box className="section-icon">
+                    <Settings size={16} />
+                  </Box>
                   <Text tt="uppercase" size="xs" fw={700} c="dimmed" style={{ letterSpacing: '0.1em' }}>
                     Configuration
                   </Text>
                 </Group>
 
-                <Paper radius="lg" withBorder overflow="hidden">
+                <Paper radius="lg" withBorder overflow="hidden" className="glass-card config-panel">
                   <Tabs defaultValue="basic" variant="pills" radius="md" p="sm">
-                    <Tabs.List style={{ border: 'none' }}>
-                      <Tabs.Tab value="basic" leftSection={<Settings size={14} />} fw={600}>
+                    <Tabs.List style={{ border: 'none' }} className="config-tabs">
+                      <Tabs.Tab value="basic" leftSection={<Settings size={14} />} fw={600} className="config-tab">
                         Basic
                       </Tabs.Tab>
-                      <Tabs.Tab value="models" leftSection={<Cpu size={14} />} fw={600}>
+                      <Tabs.Tab value="models" leftSection={<Cpu size={14} />} fw={600} className="config-tab">
                         Models
                       </Tabs.Tab>
-                      <Tabs.Tab value="advanced" leftSection={<Wand2 size={14} />} fw={600}>
+                      <Tabs.Tab value="advanced" leftSection={<Wand2 size={14} />} fw={600} className="config-tab">
                         Advanced
                       </Tabs.Tab>
                     </Tabs.List>
@@ -302,7 +319,7 @@ function App() {
                           value={asciiModel}
                           onChange={setAsciiModel}
                         />
-                        <Paper p="sm" withBorder bg="dark.8">
+                        <Paper p="sm" withBorder bg="dark.8" className="option-card">
                           <Switch
                             label={<Text size="sm" fw={500}>Enable Neural Mapper</Text>}
                             description="AI-enhanced character selection"
@@ -338,21 +355,21 @@ function App() {
                           max={999999}
                         />
                         <SimpleGrid cols={2}>
-                          <Paper p="sm" withBorder bg="dark.8">
+                          <Paper p="sm" withBorder bg="dark.8" className="option-card">
                             <Switch
                               label={<Group gap={6}><Moon size={14} /><Text size="sm" fw={500}>Dark Mode</Text></Group>}
                               checked={darkModeInvert}
                               onChange={(e) => setDarkModeInvert(e.currentTarget.checked)}
                             />
                           </Paper>
-                          <Paper p="sm" withBorder bg="dark.8">
+                          <Paper p="sm" withBorder bg="dark.8" className="option-card">
                             <Switch
                               label={<Group gap={6}><Route size={14} /><Text size="sm" fw={500}>Auto-Routing</Text></Group>}
                               checked={autoRouting}
                               onChange={(e) => setAutoRouting(e.currentTarget.checked)}
                             />
                           </Paper>
-                          <Paper p="sm" withBorder bg="dark.8" style={{ gridColumn: 'span 2' }}>
+                          <Paper p="sm" withBorder bg="dark.8" style={{ gridColumn: 'span 2' }} className="option-card">
                             <Switch
                               label={<Group gap={6}><Palette size={14} /><Text size="sm" fw={500}>Semantic Palette</Text></Group>}
                               description="Use subject-aware characters"
@@ -377,47 +394,48 @@ function App() {
                 leftSection={loading ? <Loader size={20} color="white" /> : <Sparkles size={20} />}
                 onClick={handleGenerate}
                 disabled={loading || !prompt.trim()}
-                styles={{ root: { transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-2px)' } } }}
+                className={`generate-btn ${!loading && prompt.trim() ? 'ready-pulse' : ''}`}
               >
                 {loading ? 'Generating Art...' : 'Generate ASCII Art'}
               </Button>
 
               {/* Process Log */}
-              {logs.length > 0 && (
-                <Paper p="sm" withBorder bg="dark.8">
-                  <Group justify="space-between" mb="xs">
-                    <Text size="xs" fw={700} c="dimmed" tt="uppercase" style={{ letterSpacing: '0.05em' }}>
-                      Thinking Process
-                    </Text>
-                    <Brain size={14} color="var(--mantine-color-dimmed)" />
-                  </Group>
-                  <Code block style={{ background: 'transparent', fontSize: 11, lineHeight: 1.6 }}>
-                    {logs.map(l => (
-                      <div key={l.id} style={{
-                        color: l.type === 'error' ? '#ff6b6b' :
-                          l.type === 'success' ? '#69db7c' : '#adb5bd',
-                        display: 'flex',
-                        gap: '8px'
-                      }}>
-                        <span style={{ opacity: 0.5 }}>›</span> {l.msg}
-                      </div>
-                    ))}
-                  </Code>
-                </Paper>
-              )}
+              <Transition mounted={logs.length > 0} transition="slide-up" duration={300}>
+                {(styles) => (
+                  <Paper p="sm" withBorder bg="dark.8" className="process-log" style={styles}>
+                    <Group justify="space-between" mb="xs">
+                      <Text size="xs" fw={700} c="dimmed" tt="uppercase" style={{ letterSpacing: '0.05em' }}>
+                        Thinking Process
+                      </Text>
+                      <Brain size={14} color="var(--mantine-color-dimmed)" />
+                    </Group>
+                    <Code block style={{ background: 'transparent', fontSize: 11, lineHeight: 1.6 }}>
+                      {logs.map(l => (
+                        <div key={l.id} className={`log-entry log-${l.type}`}>
+                          <span className="log-timestamp">[{l.timestamp}]</span>
+                          <span className="log-arrow">›</span>
+                          <span>{l.msg}</span>
+                        </div>
+                      ))}
+                    </Code>
+                  </Paper>
+                )}
+              </Transition>
             </Stack>
 
             {/* Right Column - Output */}
             <Stack gap="xl">
               <Box>
-                <Group gap="xs" mb="sm">
-                  <ImageIcon size={16} className="mantine-primary" />
+                <Group gap="xs" mb="sm" className="section-header">
+                  <Box className="section-icon">
+                    <ImageIcon size={16} />
+                  </Box>
                   <Text tt="uppercase" size="xs" fw={700} c="dimmed" style={{ letterSpacing: '0.1em' }}>
                     Visual Output
                   </Text>
                 </Group>
 
-                <Paper p="xs" radius="lg" withBorder bg="var(--mantine-color-dark-8)">
+                <Paper p="xs" radius="lg" withBorder bg="var(--mantine-color-dark-8)" className="glass-card output-card">
                   <Box
                     style={{
                       aspectRatio: '1',
@@ -430,12 +448,38 @@ function App() {
                       position: 'relative'
                     }}
                   >
-                    {image ? (
-                      <img src={image} alt="Generated" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                    {loading && !image ? (
+                      <Stack align="center" gap="md">
+                        <Skeleton height={200} width={200} radius="md" animate />
+                        <Skeleton height={16} width={150} radius="sm" animate />
+                      </Stack>
+                    ) : image ? (
+                      <>
+                        {!imageLoaded && (
+                          <Box style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Loader size="lg" />
+                          </Box>
+                        )}
+                        <img 
+                          src={image} 
+                          alt="Generated" 
+                          style={{ 
+                            maxWidth: '100%', 
+                            maxHeight: '100%', 
+                            objectFit: 'contain',
+                            opacity: imageLoaded ? 1 : 0,
+                            transition: 'opacity 0.3s ease'
+                          }} 
+                          onLoad={() => setImageLoaded(true)}
+                        />
+                      </>
                     ) : (
-                      <Stack align="center" gap="xs" c="dimmed">
-                        <ImageIcon size={48} strokeWidth={1} />
-                        <Text size="sm">Image Visualization</Text>
+                      <Stack align="center" gap="xs" className="empty-state">
+                        <Box className="empty-icon">
+                          <ImageIcon size={48} strokeWidth={1} />
+                        </Box>
+                        <Text size="sm" c="dimmed">Image will appear here</Text>
+                        <Text size="xs" c="dimmed" style={{ opacity: 0.5 }}>Enter a prompt and click generate</Text>
                       </Stack>
                     )}
                   </Box>
@@ -444,26 +488,63 @@ function App() {
 
               <Box style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Group justify="space-between" mb="sm">
-                  <Group gap="xs">
-                    <Terminal size={16} className="mantine-primary" />
+                  <Group gap="xs" className="section-header">
+                    <Box className="section-icon">
+                      <Terminal size={16} />
+                    </Box>
                     <Text tt="uppercase" size="xs" fw={700} c="dimmed" style={{ letterSpacing: '0.1em' }}>
                       ASCII Result
                     </Text>
                   </Group>
-                  {ascii && (
-                    <CopyButton value={ascii}>
-                      {({ copied, copy }) => (
-                        <Tooltip label={copied ? 'Copied!' : 'Copy raw text'}>
-                          <ActionIcon variant="light" onClick={copy} color={copied ? 'teal' : 'gray'} radius="md">
-                            {copied ? <Check size={16} /> : <Copy size={16} />}
+                  <Group gap="xs">
+                    {ascii && (
+                      <>
+                        <Tooltip label="Zoom out">
+                          <ActionIcon 
+                            variant="subtle" 
+                            color="gray" 
+                            radius="md" 
+                            onClick={() => setAsciiFontSize(s => Math.max(3, s - 1))}
+                          >
+                            <ZoomOut size={16} />
                           </ActionIcon>
                         </Tooltip>
-                      )}
-                    </CopyButton>
-                  )}
+                        <Tooltip label="Reset zoom">
+                          <ActionIcon 
+                            variant="subtle" 
+                            color="gray" 
+                            radius="md" 
+                            onClick={() => setAsciiFontSize(6)}
+                          >
+                            <RotateCcw size={16} />
+                          </ActionIcon>
+                        </Tooltip>
+                        <Tooltip label="Zoom in">
+                          <ActionIcon 
+                            variant="subtle" 
+                            color="gray" 
+                            radius="md" 
+                            onClick={() => setAsciiFontSize(s => Math.min(12, s + 1))}
+                          >
+                            <ZoomIn size={16} />
+                          </ActionIcon>
+                        </Tooltip>
+                        <Box w={1} h={16} bg="dark.5" />
+                        <CopyButton value={ascii}>
+                          {({ copied, copy }) => (
+                            <Tooltip label={copied ? 'Copied!' : 'Copy raw text'}>
+                              <ActionIcon variant="light" onClick={copy} color={copied ? 'teal' : 'gray'} radius="md">
+                                {copied ? <Check size={16} /> : <Copy size={16} />}
+                              </ActionIcon>
+                            </Tooltip>
+                          )}
+                        </CopyButton>
+                      </>
+                    )}
+                  </Group>
                 </Group>
 
-                <Paper flex={1} radius="lg" withBorder overflow="hidden" style={{ display: 'flex', flexDirection: 'column' }}>
+                <Paper flex={1} radius="lg" withBorder overflow="hidden" style={{ display: 'flex', flexDirection: 'column' }} className="glass-card ascii-output">
                   <Box
                     p="md"
                     style={{
@@ -474,32 +555,57 @@ function App() {
                       position: 'relative'
                     }}
                   >
-                    {ascii ? (
-                      <pre style={{
-                        fontFamily: 'JetBrains Mono, Fira Code, monospace',
-                        fontSize: 6, // Keep small for detail
-                        lineHeight: 1,
-                        color: '#58a6ff',
-                        margin: 0,
-                        whiteSpace: 'pre'
-                      }}>
-                        {ascii}
-                      </pre>
+                    {loading && !ascii ? (
+                      <Box py="xl">
+                        <Stack gap="xs" align="center">
+                          <Skeleton height={8} width="80%" radius="sm" animate />
+                          <Skeleton height={8} width="90%" radius="sm" animate />
+                          <Skeleton height={8} width="75%" radius="sm" animate />
+                          <Skeleton height={8} width="85%" radius="sm" animate />
+                          <Skeleton height={8} width="70%" radius="sm" animate />
+                        </Stack>
+                      </Box>
+                    ) : ascii ? (
+                      <Transition mounted={!!ascii} transition="fade" duration={400}>
+                        {(styles) => (
+                          <pre style={{
+                            ...styles,
+                            fontFamily: 'JetBrains Mono, Fira Code, monospace',
+                            fontSize: asciiFontSize,
+                            lineHeight: 1,
+                            color: '#58a6ff',
+                            margin: 0,
+                            whiteSpace: 'pre'
+                          }}>
+                            {ascii}
+                          </pre>
+                        )}
+                      </Transition>
                     ) : (
                       <Center h="100%">
-                        <Stack align="center" gap="xs" c="dimmed" style={{ opacity: 0.5 }}>
-                          <Terminal size={48} strokeWidth={1} />
-                          <Text size="sm">Waiting for input...</Text>
+                        <Stack align="center" gap="xs" className="empty-state">
+                          <Box className="empty-icon">
+                            <Terminal size={48} strokeWidth={1} />
+                          </Box>
+                          <Text size="sm" c="dimmed">ASCII art will appear here</Text>
+                          <Text size="xs" c="dimmed" style={{ opacity: 0.5 }}>Your generated art in characters</Text>
                         </Stack>
                       </Center>
                     )}
                   </Box>
                   {ascii && (
-                    <Box p="xs" bg="dark.8" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                      <Group justify="flex-end" gap="xs">
-                        <Text size="xs" c="dimmed">{width} chars wide</Text>
-                        <Text size="xs" c="dimmed">•</Text>
-                        <Text size="xs" c="dimmed">{ascii.split('\n').length} lines</Text>
+                    <Box p="xs" bg="dark.8" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }} className="ascii-stats">
+                      <Group justify="space-between">
+                        <Group gap="xs">
+                          <Badge size="xs" variant="dot" color="blue">READY</Badge>
+                        </Group>
+                        <Group gap="xs">
+                          <Text size="xs" c="dimmed">{width} chars wide</Text>
+                          <Text size="xs" c="dimmed">•</Text>
+                          <Text size="xs" c="dimmed">{ascii.split('\n').length} lines</Text>
+                          <Text size="xs" c="dimmed">•</Text>
+                          <Text size="xs" c="dimmed">{asciiFontSize}px font</Text>
+                        </Group>
                       </Group>
                     </Box>
                   )}

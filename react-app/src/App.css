@@ -1,42 +1,380 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* ===== Animated Gradient Header ===== */
+.gradient-text {
+  background: linear-gradient(135deg, #4dabf7 0%, #748ffc 50%, #9775fa 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-left: 0.3em;
+  animation: gradient-shift 3s ease infinite;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
-@keyframes logo-spin {
+.gradient-line {
+  height: 3px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    #4dabf7 20%, 
+    #748ffc 50%, 
+    #9775fa 80%, 
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: gradient-flow 4s linear infinite;
+  border-radius: 2px;
+  opacity: 0.7;
+}
+
+@keyframes gradient-flow {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.header-label {
+  animation: fade-slide-in 0.5s ease-out;
+}
+
+.header-title {
+  animation: fade-slide-in 0.5s ease-out 0.1s both;
+}
+
+@keyframes fade-slide-in {
   from {
-    transform: rotate(0deg);
+    opacity: 0;
+    transform: translateY(-10px);
   }
   to {
-    transform: rotate(360deg);
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+/* ===== Version Badge ===== */
+.version-badge {
+  margin-top: 8px;
+  text-transform: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.version-badge:hover {
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ===== Section Headers ===== */
+.section-header {
+  position: relative;
+}
+
+.section-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mantine-color-blue-4);
+  transition: transform 0.2s ease;
+}
+
+.section-header:hover .section-icon {
+  transform: scale(1.1);
+}
+
+/* ===== Glass Card Effect ===== */
+.glass-card {
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* ===== Example Chips ===== */
+.example-chip {
+  background-color: rgba(255, 255, 255, 0.03);
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.example-chip:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(77, 171, 247, 0.3);
+  transform: translateY(-2px);
+}
+
+.example-chip:active {
+  transform: translateY(0);
+}
+
+/* ===== Prompt Input ===== */
+.prompt-input:focus {
+  border-color: var(--mantine-color-blue-5) !important;
+  box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.15);
+}
+
+/* ===== Configuration Panel ===== */
+.config-panel {
+  background: rgba(37, 38, 43, 0.8);
+}
+
+.config-tabs {
+  gap: 4px;
+}
+
+.config-tab {
+  transition: all 0.2s ease;
+}
+
+.config-tab:hover:not([data-active]) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.config-tab[data-active] {
+  background: rgba(77, 171, 247, 0.15) !important;
+}
+
+/* ===== Option Cards ===== */
+.option-card {
+  transition: all 0.2s ease;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.option-card:hover {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(26, 27, 30, 0.9) !important;
+}
+
+/* ===== Generate Button ===== */
+.generate-btn {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.generate-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(77, 171, 247, 0.3);
+}
+
+.generate-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.generate-btn.ready-pulse::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  animation: pulse-shine 2s ease-in-out infinite;
+}
+
+@keyframes pulse-shine {
+  0%, 100% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  50% {
+    transform: translateX(100%);
+    opacity: 1;
   }
 }
 
-.card {
-  padding: 2em;
+/* ===== Process Log ===== */
+.process-log {
+  border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
-.read-the-docs {
-  color: #888;
+.log-entry {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  animation: log-fade-in 0.3s ease-out;
+}
+
+.log-entry.log-info {
+  color: #adb5bd;
+}
+
+.log-entry.log-error {
+  color: #ff6b6b;
+}
+
+.log-entry.log-success {
+  color: #69db7c;
+}
+
+.log-timestamp {
+  color: #5c5f66;
+  font-size: 10px;
+  min-width: 70px;
+}
+
+.log-arrow {
+  opacity: 0.5;
+  color: var(--mantine-color-blue-5);
+}
+
+@keyframes log-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ===== Output Cards ===== */
+.output-card {
+  transition: all 0.3s ease;
+}
+
+.output-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+/* ===== Empty States ===== */
+.empty-state {
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.empty-state:hover {
+  opacity: 0.8;
+}
+
+.empty-icon {
+  color: var(--mantine-color-dimmed);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* ===== ASCII Output ===== */
+.ascii-output {
+  transition: all 0.3s ease;
+}
+
+.ascii-output:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.ascii-stats {
+  transition: background 0.2s ease;
+}
+
+/* ===== Mobile Responsiveness ===== */
+@media (max-width: 768px) {
+  .header-section {
+    text-align: center;
+  }
+  
+  .header-section > div:first-child {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .version-badge {
+    margin-top: 16px;
+    order: -1;
+  }
+  
+  .gradient-line {
+    margin-top: 24px;
+  }
+  
+  .example-chip {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 100px;
+  }
+  
+  .config-tabs {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .config-tab {
+    flex: 1;
+    justify-content: center;
+  }
+  
+  .generate-btn {
+    font-size: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .example-chip {
+    flex: 1 1 100%;
+  }
+  
+  .config-tab span:last-child {
+    display: none;
+  }
+}
+
+/* ===== Scrollbar Styling ===== */
+.ascii-output ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.ascii-output ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.ascii-output ::-webkit-scrollbar-thumb {
+  background: rgba(88, 166, 255, 0.3);
+  border-radius: 4px;
+}
+
+.ascii-output ::-webkit-scrollbar-thumb:hover {
+  background: rgba(88, 166, 255, 0.5);
+}
+
+/* ===== Focus States (Accessibility) ===== */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--mantine-color-blue-5);
+  outline-offset: 2px;
+}
+
+/* ===== Reduced Motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  .gradient-text,
+  .gradient-line,
+  .header-label,
+  .header-title,
+  .empty-icon,
+  .generate-btn.ready-pulse::before,
+  .log-entry {
+    animation: none;
+  }
+  
+  .glass-card,
+  .example-chip,
+  .option-card,
+  .generate-btn,
+  .section-icon,
+  .version-badge {
+    transition: none;
+  }
 }
