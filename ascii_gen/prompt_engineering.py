@@ -524,7 +524,11 @@ FEATURE_ENHANCEMENT: Dict[str, str] = {
     r"\bbutterfly\b": "butterfly with wings fully open flat view, antennae",
     
     # Humans
-    r"\bperson\b": "person with arms and legs clearly distinct from torso",
+    r"\bperson\b|human": "person with clearly distinct head, torso, arms, and legs",
+    r"\bman\b": "man standing upright, full body visible, arms and legs clearly distinct from torso",
+    r"\bwoman\b": "woman standing upright, full body visible, arms and legs clearly distinct from torso",
+    r"\bboy\b": "boy standing upright, full body visible, arms and legs clearly distinct",
+    r"\bgirl\b": "girl standing upright, full body visible, arms and legs clearly distinct",
     r"\bhand\b": "hand with five fingers splayed open, distinct gaps between fingers",
 
     r"\beye\b": "eye with iris circle, pupil, eyelid curve, and lashes",
