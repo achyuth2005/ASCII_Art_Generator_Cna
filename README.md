@@ -819,6 +819,34 @@ Spatially structured prompt wording preserves multiple subjects more reliably. E
 | Spatially structured | ~90% | *"LEFT: man standing. RIGHT: car side profile."* |
 | Equal-detail structured | ~95% | *"A man and a car. LEFT: man in full body view... RIGHT: car with wheels..."* |
 
+### How We Address This
+
+Based on these observations, the pipeline includes several mechanisms to improve multi-subject fidelity:
+
+**1. Automatic Composition Detection** (`composition_handler.py`)
+The system detects prepositions like "with", "on", "next to" and automatically splits the prompt into spatially structured output (`LEFT: ... RIGHT: ...` or `TOP: ... BOTTOM: ...`). Each subject is enhanced independently, preserving detail for both.
+
+```
+"Man with a car"  →  "side-by-side composition: LEFT: man, RIGHT: car side view..."
+"Cat on chair"    →  "vertical composition: TOP: cat, BOTTOM: chair..."
+```
+
+**2. Multi-Subject Few-Shot Examples** (`llm_rewriter.py`)
+The LLM rewriter includes dedicated person+object, person+animal, and person+vehicle examples that teach the model to allocate equal detail to both subjects rather than defaulting to single-subject patterns.
+
+**3. Attend-and-Excite Subject Verification** (`llm_rewriter.py`)
+After rewriting, the system extracts all subjects from the original prompt and verifies they appear in the rewritten version. Missing subjects are **prepended** (not appended) to the rewritten prompt — diffusion models weight early tokens more heavily, so prepending ensures the missing subject gets adequate attention.
+
+```python
+subjects = extract_subjects("man with a car")     # ['man', 'car']
+all_present, missing = verify_subjects_present(original, rewritten)
+if missing:  # e.g., ['man'] was dropped
+    rewritten = "A man clearly visible with distinct outlines. " + rewritten
+```
+
+**4. Composition-First Conflict Resolution** (`prompt_engineering.py`)
+When both a composition match (multi-subject split) and a concept override (single-object template) apply to the same prompt, the system always prioritizes composition. This prevents single-object templates from swallowing multi-subject prompts — the individual subjects still receive their concept overrides through the composition handler's subject resolver.
+
 ---
 
 ## 🔮 Future Scope
