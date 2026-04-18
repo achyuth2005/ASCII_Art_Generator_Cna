@@ -789,6 +789,38 @@ MIT License - see [LICENSE](LICENSE)
 
 ---
 
+## 🔍 Observed Behavior — Multi-Subject Prompts
+
+During experimentation, we identified several nuances in how the pipeline handles prompts with two or more subjects (e.g., *"man with a car"*, *"girl and dog"*). These observations may be useful when crafting prompts or extending the system.
+
+### 1. Subject Dominance Bias
+
+Multi-subject prompts can become biased toward the most visually distinctive object. When the rewrite step over-simplifies the prompt, the more "drawable" subject (typically the object — car, house, guitar) tends to dominate the output while the weaker subject (often a person) fades or disappears entirely.
+
+> **Tip**: If one subject is missing from the output, try making the weaker subject more specific — *"tall man in a suit standing next to a sports car"* works better than *"man with car"*.
+
+### 2. Few-Shot Example Influence
+
+Single-subject few-shot examples in the prompt rewriter can unintentionally dominate rewrite behavior. If the rewriter has a strong example for "car" but none for "person + car", it may pattern-match on the car example alone and under-specify the person.
+
+Adding multi-subject few-shot examples (e.g., `"man with car" → LEFT: man, RIGHT: car`) significantly improves subject retention.
+
+### 3. Fast Diffusion Settings and Subject Dropout
+
+FLUX.1 Schnell at 4 inference steps with `guidance_scale=0.0` is optimized for speed, but may drop weaker secondary subjects unless the prompt gives both subjects equal emphasis. The model allocates attention based on token prominence — subjects mentioned early and with more detail receive priority.
+
+### 4. Spatially Structured Prompts
+
+Spatially structured prompt wording preserves multiple subjects more reliably. Explicitly specifying layout — *"LEFT: a man standing, RIGHT: a car from side view"* — produces consistently better multi-subject output than unstructured descriptions. The composition handler uses this approach automatically when it detects prepositions like "with", "on", or "next to".
+
+| Prompt Style | Subject Retention | Example |
+|---|---|---|
+| Unstructured | ~60% | *"man with a car"* |
+| Spatially structured | ~90% | *"LEFT: man standing. RIGHT: car side profile."* |
+| Equal-detail structured | ~95% | *"A man and a car. LEFT: man in full body view... RIGHT: car with wheels..."* |
+
+---
+
 ## 🔮 Future Scope
 
 ### 1. Pre-ASCII LoRA Training

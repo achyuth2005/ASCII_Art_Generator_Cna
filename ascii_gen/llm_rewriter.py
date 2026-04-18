@@ -87,6 +87,13 @@ If user says "cat on a table" -> The output MUST include BOTH the cat AND the ta
 If user says "house with tree" -> The output MUST include BOTH the house AND the tree.
 **NEVER drop secondary elements. The user mentioned them for a reason.**
 
+## MULTI-SUBJECT HANDLING (MANDATORY)
+When the prompt contains TWO OR MORE subjects (e.g., "man with car", "girl and dog"):
+1. **EQUAL DETAIL** - Describe EACH subject with the SAME level of detail. Do NOT make one subject the "main" and another a footnote.
+2. **SPATIAL LAYOUT** - Always specify WHERE each subject is: "LEFT: [subject A full description]. RIGHT: [subject B full description]."
+3. **BOTH VISIBLE** - Start the prompt by naming BOTH subjects: "A [subject A] and a [subject B]..."
+4. **NO OMISSION** - If the user says "man with car", the man is NOT optional scenery — he is a PRIMARY subject.
+
 ## STYLE PRIORITY (Choose based on request)
 - **Default**: "Black and white ink sketch, simple lines, white background"
 - **Vintage Engraving**: "Cross-hatching, highly detailed, woodcut texture."
@@ -139,6 +146,21 @@ OUTPUT: "Vintage Patent Illustration of a desktop computer. Clean technical line
 INPUT: "car"
 REASONING: Car -> Automobilia Sketch.
 OUTPUT: "Classic automotive design sketch of a car from side profile. Streamlined ink lines, bold wheel arches, high contrast reflections on bodywork, white background, marker rendering style."
+
+### Example 9: Person + Vehicle (MULTI-SUBJECT)
+INPUT: "man with car"
+REASONING: Two subjects - both must be equally prominent. Use spatial layout.
+OUTPUT: "Line drawing of a man and a car. LEFT: A man standing in full body view, clear head, torso, arms, and legs with simple outfit lines. RIGHT: A car from side profile, bold wheel arches, windows, door lines. Both subjects equally sized and detailed, white background, clean black outlines."
+
+### Example 10: Person + Animal (MULTI-SUBJECT)
+INPUT: "girl with dog"
+REASONING: Two living subjects - give each distinct features and equal space.
+OUTPUT: "Ink sketch of a girl and a dog side by side. LEFT: A girl standing, round head, long hair lines, simple dress, arms at sides. RIGHT: A dog sitting, floppy ears, tail, four legs visible. Both clearly drawn with equal detail, generous white space between them, white background."
+
+### Example 11: Person + Object (MULTI-SUBJECT)
+INPUT: "man holding umbrella"
+REASONING: Person as primary with connected object. Show the interaction clearly.
+OUTPUT: "Clean line drawing of a man holding an umbrella. The man: full body, standing upright, one arm raised holding the umbrella handle. The umbrella: dome canopy above his head, curved handle in his hand. Both the person and umbrella drawn with equal line weight, white background, simple outlines."
 
 
 ## OUTPUT FORMAT
@@ -348,15 +370,16 @@ def inject_missing_subjects(rewritten: str, missing_subjects: list) -> str:
     Inject missing subjects into the rewritten prompt.
     
     Ensures semantic faithfulness by explicitly adding neglected subjects.
+    Prepends rather than appends because diffusion models weight early tokens more.
     """
     if not missing_subjects:
         return rewritten
     
-    # Create injection phrase
-    subjects_str = ", ".join(missing_subjects)
-    injection = f" Also include: {subjects_str} with clear distinct outlines."
+    # Prepend missing subjects so they get higher attention weight
+    subjects_str = " and ".join(missing_subjects)
+    injection = f"A {subjects_str} clearly visible with distinct outlines. "
     
-    return rewritten.strip() + injection
+    return injection + rewritten.strip()
 
 
 # =============================================================================

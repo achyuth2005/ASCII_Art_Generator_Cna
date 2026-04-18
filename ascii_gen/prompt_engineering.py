@@ -421,7 +421,7 @@ CONCEPT_REFINEMENT: Dict[str, str] = {
         "cupcake: wrapper at bottom, swirled frosting dome on top, cherry",
     r".*\bcoffee\b.*|.*\btea\b.*": 
         "coffee cup: curved mug handle, steam swirls rising from top",
-    r".*\bbook\b.*": 
+    r"^(?!.*coloring\s+book).*\bbook\b.*": 
         "open book: two page rectangles joined at spine, lines for text",
     r".*\bkey\b.*": 
         "key: circular head with hole, rectangular shaft with teeth at end",
@@ -724,31 +724,13 @@ class PromptEnhancer:
 
         if comp_match and override_data:
             # Conflict resolution:
-            # If the override pattern explicitly mentions BOTH subjects, it's a specific "scene" override -> Use Override.
-            # Otherwise, it's likely a generic object override (e.g. "always draw elephant") catching a complex scene -> Use Composition.
-            override_val, override_pattern = override_data
-            
-            # Simple heuristic: check if subjects are roughly in the pattern
-            # Regex patterns can be complex, so we check if the pattern string roughly contains subject words
-            # or if the override text itself is very specific.
-            # Better: Check if the composition match covers "more" of the prompt?
-            # Let's stick to the "Mentions Both" heuristic.
-            
-            # Clean subjects for checking
-            subj_a_simple = comp_match.subject_a.split()[0].lower() # e.g. "cat" from "a cat"
-            subj_b_simple = comp_match.subject_b.split()[0].lower()
-            
-            # Check if pattern seems to account for both
-            # This is tricky with regex strings. 
-            # Alternative: Assume Composition is better UNLESS the override is a known "pair" pattern.
-            # Most pair patterns in CONCEPT_REFINEMENT use ".*A.*B.*|.*B.*A.*"
-            
-            if ".*" in override_pattern and ("|" in override_pattern or override_pattern.count(".*") > 2):
-                 # Likely a complex pattern
-                 use_composition = False
-            else:
-                 # Likely a simple pattern like ".*elephant.*"
-                 use_composition = True
+            # When we have both a composition (e.g., "Man with a car" -> subject_a="Man", subject_b="a car")
+            # and a concept override (e.g., .*\bcar\b.* matching the full prompt),
+            # ALWAYS prefer composition. The composition handler will split the prompt
+            # into individual subjects, and each subject can still get its own concept override
+            # via the subject_resolver below. This prevents single-object overrides (like "car")
+            # from swallowing the entire multi-subject prompt.
+            use_composition = True
                  
         elif comp_match:
             use_composition = True

@@ -103,7 +103,7 @@ async def generate(request: GenerateRequest):
     
     # Step 2: Generate image
     try:
-        image = online_gen.generate(rewritten)
+        image = online_gen.generate(rewritten, skip_preprocessing=True)
         if image is None:
             raise HTTPException(status_code=500, detail="Image generation failed: No image returned from API (Check API Key or Network)")
     except Exception as e:
