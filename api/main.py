@@ -6,6 +6,7 @@ Wraps the existing ascii_gen module for HTTP access
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import Optional
 import os
 import sys
 import base64
@@ -19,10 +20,14 @@ load_dotenv()
 
 from ascii_gen.online_generator import OnlineGenerator
 from ascii_gen.production_training import ProductionCNNMapper
-from ascii_gen.gradient_mapper import GradientMapper, GradientConfig, RAMP_STANDARD
+from ascii_gen.gradient_mapper import (
+    GradientMapper, GradientConfig,
+    RAMP_STANDARD, RAMP_ULTRA, RAMP_NEAT, RAMP_DETAILED, RAMP_MINIMAL
+)
+from ascii_gen.perceptual import SSIMMapper
 from ascii_gen.llm_rewriter import LLMPromptRewriter
 
-app = FastAPI(title="ASCII Art Generator API", version="1.0.0")
+app = FastAPI(title="ASCII Art Generator API", version="2.0.0")
 
 # CORS for React frontend
 app.add_middleware(
@@ -63,7 +68,15 @@ def load_models():
 class GenerateRequest(BaseModel):
     prompt: str
     width: int = 125
-    quality: str = "Standard"
+    quality: str = "standard"
+    image_model: str = "flux-hf"
+    ascii_model: str = "resnet18"
+    seed: Optional[int] = None
+    invert: bool = False
+    auto_routing: bool = False
+    semantic_palette: bool = False
+    neural_mapper: bool = True
+    custom_token: Optional[str] = None
 
 
 class GenerateResponse(BaseModel):
@@ -74,7 +87,7 @@ class GenerateResponse(BaseModel):
 
 @app.get("/")
 async def root():
-    return {"status": "ok", "message": "ASCII Art Generator API"}
+    return {"status": "ok", "message": "ASCII Art Generator API v2.0"}
 
 
 @app.get("/health")
@@ -87,40 +100,99 @@ async def generate(request: GenerateRequest):
     """Generate ASCII art from a prompt."""
     load_models()
     
-    if not online_gen:
-        raise HTTPException(status_code=500, detail="HF_TOKEN not configured")
-    
     prompt = request.prompt
     rewritten = prompt
     
     # Step 1: Rewrite prompt with LLM
+    llm_success = False
     if rewriter:
         try:
             result = rewriter.rewrite(prompt, model_type="FLUX")
-            rewritten = result.rewritten  # Extract the string from RewriteResult
+            rewritten = result.rewritten
+            llm_success = True
         except Exception as e:
             print(f"Rewrite failed: {e}")
+            
+    # Fallback to rule-based enhancement if LLM failed or isn't available
+    if not llm_success:
+        try:
+            from ascii_gen.prompt_engineering import enhance_prompt
+            rewritten = enhance_prompt(prompt)
+        except Exception as e:
+            print(f"Rule-based enhancement failed: {e}")
+            rewritten = prompt
     
-    # Step 2: Generate image
+    # Step 2: Generate image based on selected image model
+    image = None
+    
+    # Determine which HF token to use
+    hf_token = request.custom_token or os.getenv("HF_TOKEN")
+    
     try:
-        image = online_gen.generate(rewritten, skip_preprocessing=True)
+        if request.image_model == "flux-hf":
+            # Use HuggingFace FLUX.1-schnell
+            if not hf_token:
+                raise ValueError("HF_TOKEN required for FLUX.1 HuggingFace model")
+            gen = OnlineGenerator(api_key=hf_token)
+            image = gen.generate(
+                rewritten,
+                skip_preprocessing=True,
+                seed=request.seed,
+            )
+        
+        elif request.image_model == "pollinations-flux":
+            # Use Pollinations with FLUX model (free, no token needed)
+            gen = OnlineGenerator(api_key=None)
+            image = gen._generate_pollinations(
+                rewritten,
+                width=512,
+                height=512,
+                seed=request.seed,
+            )
+        
+        elif request.image_model == "pollinations-turbo":
+            # Use Pollinations with turbo model (fastest, free)
+            import urllib.parse
+            import requests as req
+            import io
+            from PIL import Image as PILImage
+            
+            encoded = urllib.parse.quote(rewritten)
+            url = f"https://image.pollinations.ai/prompt/{encoded}?width=512&height=512&nologo=true&model=turbo"
+            if request.seed is not None:
+                url += f"&seed={request.seed}"
+            
+            print(f"🌐 Pollinations Turbo: {url[:80]}...")
+            resp = req.get(url, timeout=120, headers={
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+            })
+            if resp.status_code == 200 and len(resp.content) > 4000:
+                image = PILImage.open(io.BytesIO(resp.content)).convert("RGB")
+                print("✅ Pollinations Turbo succeeded!")
+            else:
+                raise ValueError(f"Pollinations Turbo failed: {resp.status_code}")
+        
+        else:
+            # Default fallback to HuggingFace
+            if online_gen:
+                image = online_gen.generate(rewritten, skip_preprocessing=True, seed=request.seed)
+            else:
+                raise ValueError(f"Unknown image model: {request.image_model}")
+        
         if image is None:
-            raise HTTPException(status_code=500, detail="Image generation failed: No image returned from API (Check API Key or Network)")
+            raise HTTPException(status_code=500, detail="Image generation failed: No image returned from API")
+    
+    except HTTPException:
+        raise
     except Exception as e:
         with open("server_error.log", "a") as f:
             import traceback
             traceback.print_exc(file=f)
         raise HTTPException(status_code=500, detail=f"Image generation failed: {str(e)}")
     
-    # Step 3: Convert to ASCII
+    # Step 3: Convert to ASCII based on selected render mode
     try:
-        config = GradientConfig(
-            width=request.width,
-            ramp=RAMP_STANDARD,
-            invert=False
-        )
-        mapper = GradientMapper(config)
-        ascii_art = mapper.convert(image)
+        ascii_art = convert_to_ascii(image, request)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"ASCII conversion failed: {str(e)}")
     
@@ -135,6 +207,74 @@ async def generate(request: GenerateRequest):
         image_url=image_url,
         rewritten_prompt=rewritten
     )
+
+
+def convert_to_ascii(image, request: GenerateRequest) -> str:
+    """Convert image to ASCII using the selected render mode."""
+    mode = request.quality.lower()
+    width = request.width
+    invert = request.invert
+    
+    # SSIM mode — uses perceptual structural similarity
+    if mode == "ssim":
+        mapper = SSIMMapper(width=width)
+        return mapper.convert_image(image)
+    
+    # CNN mode — uses trained neural network for character selection
+    if mode == "cnn":
+        if cnn_mapper:
+            return cnn_mapper.convert_image(image)
+        else:
+            print("⚠️ CNN mapper not available, falling back to gradient")
+            mode = "standard"  # fallback
+    
+    # Auto mode — try CNN first (best quality), fall back to gradient
+    if mode == "auto":
+        if cnn_mapper:
+            return cnn_mapper.convert_image(image)
+        else:
+            mode = "standard"  # fallback
+    
+    # Gradient-based modes
+    ramp_map = {
+        "ultra": RAMP_ULTRA,
+        "high": RAMP_DETAILED,
+        "standard": RAMP_STANDARD,
+        "neat": RAMP_NEAT,
+        "portrait": RAMP_ULTRA,
+    }
+    
+    ramp = ramp_map.get(mode, RAMP_STANDARD)
+    
+    # Mode-specific config adjustments
+    contrast = 1.5
+    dither = True
+    sharpness = 1.5
+    
+    if mode == "neat":
+        contrast = 2.5
+        dither = False
+        sharpness = 2.0
+    elif mode == "portrait":
+        contrast = 1.2
+        sharpness = 1.3
+    elif mode == "ultra":
+        contrast = 1.4
+        sharpness = 1.3
+    elif mode == "high":
+        contrast = 1.5
+        sharpness = 1.5
+    
+    config = GradientConfig(
+        width=width,
+        ramp=ramp,
+        invert=invert,
+        contrast=contrast,
+        dither=dither,
+        sharpness=sharpness,
+    )
+    mapper = GradientMapper(config)
+    return mapper.convert(image)
 
 
 if __name__ == "__main__":
